@@ -18,8 +18,9 @@ class patient extends Model
         'Address',
         'Phone_Number',
         'Job',
-       // 'section_id',
         'createdAt',
+        'age',
+        'session_date'
 
     ];
 

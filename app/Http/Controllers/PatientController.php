@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\SectionResource;
 use App\Models\image;
 use App\Models\patient;
 use App\Models\patient_details;
@@ -41,15 +42,30 @@ public function getPatient(Request $request,$Patient_id){
 
     $patient = Patient::whereHas('sections', function ($query) use ($Patient_id) {
         $query->where('patient_id', $Patient_id);
-    })->with('details', 'sections')->get();
+    })->with('sections')->get();
 
+    $patientData = $patient->map(function ($patient) {
+        return [
+            'Patient_Name' => $patient->Patient_Name,
+            'Date_of_Birth' => $patient->Date_of_Birth,
+            'Address' => $patient->Address,
+            'Phone_Number' => $patient->Phone_Number,
+            'session_date'=>$patient->session_date,
+            'Job' => $patient->Job,
+            'createdAt' => $patient->created_at,
+            'age' => Carbon::parse($patient->Date_of_Birth)->age,
+            'sections' => SectionResource::collection($patient->sections),
+        ];
+    });
+
+    $details = patient_details::where('patient_id', $Patient_id)->first();
    // $patient = patient::with('details', 'sections')->find($Patient_id)->first();
     $profileImage = image::where('path','profileimage/'.$Patient_id)->first();
     $patientPhotos = image::where('path','patientPhotos/'.$Patient_id)->get();
 
     if($patient->isNotEmpty()){
 
-        return $this->apiResponse(['profileImage'=>$profileImage,'patientPhotos'=>$patientPhotos,'patient'=>$patient], "Get patient Successfully", 200);
+        return $this->apiResponse(['profileImage'=>$profileImage,'patientPhotos'=>$patientPhotos,'patient'=>$patientData,'details'=>$details], "Get patient Successfully", 200);
 
     }
     return $this->apiResponse(null, "there is no patient", 404);
@@ -84,9 +100,9 @@ public function getPatient(Request $request,$Patient_id){
             'MedicalHistory' => 'nullable|string|max:255',
             'ChiefComplain' => 'nullable|string|max:255',
             'Diagnosis' => 'nullable|string|max:255',
-            'images' => 'required',
+       //     'images' => 'required',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'photos' => 'required|array',
+            'photos' => 'array',
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'section_ids' => 'required|array', // Ensure section_ids is an array
             'section_ids.*' => 'integer|exists:sections,id', // Ensure each section_id exists in sections table
@@ -113,16 +129,26 @@ public function getPatient(Request $request,$Patient_id){
         ]);
             $patient->sections()->attach($request->input('section_ids'));
 
+            if ($request->hasFile('images')) {
+                $image = $request->file('images');
+                $imageName = $this->saveAttach($image, 'profileimage/' .$patient->id );
+                $newImage = new image([
+                    'name' => $imageName,
+                    'path' => 'profileimage/' .$patient->id,
 
-            $image = $request->file('images');
-            $imageName = $this->saveAttach($image, 'profileimage/' .$patient->id );
-            $newImage = new image([
-                'name' => $imageName,
-                'path' => 'profileimage/' .$patient->id,
 
-
-            ]);
-            $newImage->save();
+                ]);
+                $newImage->save();
+            }
+//            $image = $request->file('images');
+//            $imageName = $this->saveAttach($image, 'profileimage/' .$patient->id );
+//            $newImage = new image([
+//                'name' => $imageName,
+//                'path' => 'profileimage/' .$patient->id,
+//
+//
+//            ]);
+//            $newImage->save();
 
 
 
@@ -152,17 +178,19 @@ public function getPatient(Request $request,$Patient_id){
 
 
            ]);
+            if ($request->hasFile('photos')) {
 
-            foreach ($request->file('photos') as $photo) {
+                foreach ($request->file('photos') as $photo) {
 
-                $photoName = $this->saveAttach($photo, 'patientPhotos/' . $patient->id);
-                $photoName = new image([
-                    'name' => $photoName,
-                    'path' => 'patientPhotos/' . $patient->id,
+                    $photoName = $this->saveAttach($photo, 'patientPhotos/' . $patient->id);
+                    $photoName = new image([
+                        'name' => $photoName,
+                        'path' => 'patientPhotos/' . $patient->id,
 
 
-                ]);
-                $photoName->save();
+                    ]);
+                    $photoName->save();
+                }
             }
             DB::commit();
 
