@@ -53,7 +53,7 @@ public function getPatient(Request $request,$Patient_id){
             'session_date'=>$patient->session_date,
             'Job' => $patient->Job,
             'createdAt' => $patient->created_at,
-            'age' => Carbon::parse($patient->Date_of_Birth)->age,
+            'age' => $patient->age,
             'sections' => SectionResource::collection($patient->sections),
         ];
     });
@@ -121,6 +121,8 @@ public function getPatient(Request $request,$Patient_id){
             'Address' => $request->Address,
             'Phone_Number' => $request->Phone_Number,
             'Job' => $request->Job,
+         'session_date'=>$request->session_date,
+         'age'=>Carbon::parse($request->Date_of_Birth)->age,
          //   'section_id' => $request->section_id,
             'createdAt' => Carbon::now(),
 
