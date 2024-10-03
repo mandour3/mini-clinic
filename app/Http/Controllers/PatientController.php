@@ -210,13 +210,13 @@ public function getPatient(Request $request,$Patient_id){
     public function getSection(Request $request,$Section_id){
 
 //        $patients = patient::with('details', 'section')->where('section_id',$Section_id)->get();
-
+        $Section = sections::findorfail($Section_id);
         $patients = Patient::whereHas('sections', function ($query) use ($Section_id) {
             $query->where('section_id', $Section_id);
         })->get();
         if($patients->isNotEmpty()){
 
-            return $this->apiResponse($patients, "Get patients Successfully", 200);
+            return $this->apiResponse(['name of section'=>$Section->name,'number of patients'=>count($patients),'patients'=>$patients], "Get patients Successfully", 200);
 
         }
         return $this->apiResponse(null, "there is no patients", 404);
