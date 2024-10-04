@@ -21,6 +21,7 @@ class patient extends Model
         'createdAt',
         'age',
         'session_date'
+        
 
     ];
 
