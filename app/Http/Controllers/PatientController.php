@@ -39,13 +39,17 @@ class PatientController extends Controller
         $patients = Patient::with('section')->get();
 
         $PatientData = $patients->map(function($patient){
+            $profileImage = image::where('path','profileimage/'.$patient->id)->first();
+            $patientPhotos = image::where('path','patientPhotos/'.$patient->id)->get();
             return [
-                "id"        => $patient->id,
-                "name"      => $patient->Patient_Name,
-                "number"    => $patient->Phone_Number,
-                "date"      => $patient->Date_of_Birth,
-                "age"       => $patient->age,
-                "section"   => $patient->section->name ?? 'null',
+                "id"            => $patient->id,
+                "profileImage"  => $profileImage,
+                "patientPhotos" => $patientPhotos,
+                "name"          => $patient->Patient_Name,
+                "number"        => $patient->Phone_Number,
+                "date"          => $patient->Date_of_Birth,
+                "age"           => $patient->age,
+                "section"       => $patient->section->name ?? 'null',
             ];
         });
 
