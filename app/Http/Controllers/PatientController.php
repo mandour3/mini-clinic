@@ -30,15 +30,38 @@ class PatientController extends Controller
     }
     public function getSections()
     {
-
         $sections = sections::get();
-
         return $this->apiResponse($sections, "Get sections Successfully", 200);
-
-
     }
-public function getPatient(Request $request,$Patient_id){
 
+    public function getPatients()
+    {
+        $patients = Patient::with('section')->get();
+
+        $PatientData = $patients->map(function($patient){
+            $profileImage = image::where('path','profileimage/'.$patient->id)->first();
+            $patientPhotos = image::where('path','patientPhotos/'.$patient->id)->get();
+            return [
+                "id"            => $patient->id,
+                "profileImage"  => $profileImage,
+                "patientPhotos" => $patientPhotos,
+                "name"          => $patient->Patient_Name,
+                "number"        => $patient->Phone_Number,
+                "date"          => $patient->Date_of_Birth,
+                "age"           => $patient->age,
+                "section"       => $patient->section->name ?? 'null',
+            ];
+        });
+
+        return $this->apiResponse(
+            $PatientData,
+            "Get sections Successfully",
+            200
+        );
+    }
+
+
+    public function getPatient(Request $request,$Patient_id){
 
     $patient = Patient::whereHas('sections', function ($query) use ($Patient_id) {
         $query->where('patient_id', $Patient_id);
@@ -80,7 +103,7 @@ public function getPatient(Request $request,$Patient_id){
             'Address' => 'required|string|max:255',
             'Phone_Number' => 'required|string|max:20',
             'Job' => 'nullable|string|max:255',
-       //     'section_id' => 'required|integer', // Assuming section_id is an integer
+            // 'section_ids' => 'required|integer', // Assuming section_id is an integer
             'Heart_trouble' => 'nullable|string|max:255',
             'pregnancy' => 'nullable|string|max:255',
             'Hepatitis' => 'nullable|string|max:255',
@@ -110,6 +133,13 @@ public function getPatient(Request $request,$Patient_id){
         if ($validator->fails()) {
             return $this->apiResponse(null, $validator->errors(), 400);
         }
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+        
         try {
 
 
@@ -121,9 +151,9 @@ public function getPatient(Request $request,$Patient_id){
             'Address' => $request->Address,
             'Phone_Number' => $request->Phone_Number,
             'Job' => $request->Job,
-         'session_date'=>$request->session_date,
-         'age'=>Carbon::parse($request->Date_of_Birth)->age,
-         //   'section_id' => $request->section_id,
+            'session_date'=>$request->session_date,
+            'age'=>Carbon::parse($request->Date_of_Birth)->age,
+            'section_ids' => $request->section_ids,
             'createdAt' => Carbon::now(),
 
 
@@ -209,7 +239,7 @@ public function getPatient(Request $request,$Patient_id){
 
     public function getSection(Request $request,$Section_id){
 
-//        $patients = patient::with('details', 'section')->where('section_id',$Section_id)->get();
+//        $patient = patient::with('details', 'section')->where('section_id',$Section_id)->get();
         $Section = sections::findorfail($Section_id);
         $patients = Patient::whereHas('sections', function ($query) use ($Section_id) {
             $query->where('section_id', $Section_id);

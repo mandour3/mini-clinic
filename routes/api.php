@@ -39,6 +39,8 @@ Route::group(['middleware'=>'jwt.verify'],function() {
     Route::post('/addPatient',[PatientController::class,'add']);
     Route::get('/getSection/{Section_id}',[PatientController::class,'getSection']);
     Route::get('/getPatient/{Patient_id}',[PatientController::class,'getPatient']);
+    // Add API to gel All Patients
+    Route::get('/getPatients',[PatientController::class,'getPatients']);
     Route::get('/getSections',[PatientController::class,'getSections']);
     Route::post('/search',[PatientController::class,'search']);
     Route::post('/AddSection',[PatientController::class,'AddSection']);

@@ -20,4 +20,10 @@ class sections extends Model
     public function patients()
     {
         return $this->belongsToMany(Patient::class);
-    }}
+    }
+
+
+    public function section(){
+        return $this->belongsTo(Patient::class, 'id','section_id');
+    }
+}
