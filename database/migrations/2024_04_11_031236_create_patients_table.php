@@ -16,6 +16,9 @@ return new class extends Migration
             $table->string('Patient_Name');
             $table->date('Date_of_Birth')->nullable();
             $table->string('Address');
+            $table->date('session_date')->nullable();
+            $table->string('age');
+
             $table->string('Phone_Number');
             $table->string('Job')->nullable();
             $table->unsignedBigInteger('section_id');
